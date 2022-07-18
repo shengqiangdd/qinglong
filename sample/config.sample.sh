@@ -16,8 +16,8 @@ DefaultCronRule=""
 ## ql repo命令拉取脚本时需要拉取的文件后缀，直接写文件后缀名即可
 RepoFileExtensions="js py"
 
-## 由于github仓库拉取较慢，所以会默认添加代理前缀，如不需要请移除
-GithubProxyUrl="https://ghproxy.com/"
+## 代理地址，支持http/https/socks，例如 http://127.0.0.1:7890
+ProxyUrl=""
 
 ## 设置定时任务执行的超时时间，默认1h，后缀"s"代表秒(默认值), "m"代表分, "h"代表小时, "d"代表天
 CommandTimeoutTime="1h"
@@ -39,7 +39,7 @@ AutoStartBot=""
 BotRepoUrl=""
 
 ## 安装bot依赖时指定pip源，默认使用清华源，如不需要源，设置此参数为空
-PipMirror="https://pypi.tuna.tsinghua.edu.cn/simple"
+PipMirror="https://pypi.doubanio.com/simple/"
 
 ## 通知环境变量
 ## 1. Server酱
@@ -50,6 +50,8 @@ export PUSH_KEY=""
 ## 2. BARK
 ## 下方填写app提供的设备码，例如：https://api.day.app/123 那么此处的设备码就是123
 export BARK_PUSH=""
+## 下方填写推送图标设置，自定义推送图标(需iOS15或以上)
+export BARK_ICON="http://qn.whyour.cn/logo.png"
 ## 下方填写推送声音设置，例如choo，具体值请在bark-推送铃声-查看所有铃声
 export BARK_SOUND=""
 ## 下方填写推送消息分组，默认为"QingLong"
@@ -119,8 +121,12 @@ export GOBOT_QQ=""
 ## gotify_url 填写gotify地址,如https://push.example.de:8080
 ## gotify_token 填写gotify的消息应用token
 ## gotify_priority 填写推送消息优先级,默认为0
-export GOTIFY_URL="";
-export GOTIFY_TOKEN="";
-export GOTIFY_PRIORITY=0;
+export GOTIFY_URL=""
+export GOTIFY_TOKEN=""
+export GOTIFY_PRIORITY=0
+
+## 11. PushDeer
+## deer_key 填写PushDeer的key
+export DEER_KEY=""
 
 ## 其他需要的变量，脚本中需要的变量使用 export 变量名= 声明即可

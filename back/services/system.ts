@@ -3,20 +3,18 @@ import winston from 'winston';
 import config from '../config';
 import * as fs from 'fs';
 import _ from 'lodash';
-import { AuthDataType, AuthInfo, LoginStatus } from '../data/auth';
+import { AuthDataType, AuthInfo, AuthModel, LoginStatus } from '../data/auth';
 import { NotificationInfo } from '../data/notify';
 import NotificationService from './notify';
 import ScheduleService from './schedule';
 import { spawn } from 'child_process';
 import SockService from './sock';
 import got from 'got';
-import { dbs } from '../loaders/db';
 
 @Service()
 export default class SystemService {
   @Inject((type) => NotificationService)
   private notificationService!: NotificationService;
-  private authDb = dbs.authDb;
 
   constructor(
     @Inject('logger') private logger: winston.Logger,
@@ -25,34 +23,19 @@ export default class SystemService {
   ) {}
 
   public async getLogRemoveFrequency() {
-    return new Promise((resolve) => {
-      this.authDb
-        .find({ type: AuthDataType.removeLogFrequency })
-        .exec((err, docs) => {
-          if (err || docs.length === 0) {
-            resolve({});
-          } else {
-            resolve(docs[0].info);
-          }
-        });
-    });
+    const doc = await this.getDb({ type: AuthDataType.removeLogFrequency });
+    return doc || {};
   }
 
   private async updateAuthDb(payload: AuthInfo): Promise<any> {
-    return new Promise((resolve) => {
-      this.authDb.update(
-        { type: payload.type },
-        { ...payload },
-        { upsert: true, returnUpdatedDocs: true },
-        (err, num, doc: any) => {
-          if (err) {
-            resolve({} as NotificationInfo);
-          } else {
-            resolve({ ...doc.info, _id: doc._id });
-          }
-        },
-      );
-    });
+    await AuthModel.upsert({ ...payload });
+    const doc = await this.getDb({ type: payload.type });
+    return doc;
+  }
+
+  public async getDb(query: any): Promise<any> {
+    const doc: any = await AuthModel.findOne({ where: { ...query } });
+    return doc && (doc.get({ plain: true }) as any);
   }
 
   public async updateNotificationMode(notificationInfo: NotificationInfo) {
@@ -69,24 +52,28 @@ export default class SystemService {
       });
       return { code: 200, data: { ...result, code } };
     } else {
-      return { code: 400, data: '通知发送失败，请检查参数' };
+      return { code: 400, message: '通知发送失败，请检查参数' };
     }
   }
 
   public async updateLogRemoveFrequency(frequency: number) {
+    const oDoc = await this.getLogRemoveFrequency();
     const result = await this.updateAuthDb({
+      ...oDoc,
       type: AuthDataType.removeLogFrequency,
       info: { frequency },
     });
     const cron = {
-      _id: result._id,
+      id: result.id,
       name: '删除日志',
       command: `ql rmlog ${frequency}`,
-      schedule: `5 23 */${frequency} * *`,
     };
-    await this.scheduleService.cancelSchedule(cron);
+    await this.scheduleService.cancelIntervalTask(cron);
     if (frequency > 0) {
-      await this.scheduleService.generateSchedule(cron);
+      await this.scheduleService.createIntervalTask(cron, {
+        days: frequency,
+        runImmediately: true,
+      });
     }
     return { code: 200, data: { ...cron } };
   }
@@ -102,13 +89,10 @@ export default class SystemService {
       let lastVersion = '';
       let lastLog = '';
       try {
-        const result = await Promise.race([
-          got.get(config.lastVersionFile, { timeout: 1000, retry: 0 }),
-          got.get(`https://ghproxy.com/${config.lastVersionFile}`, {
-            timeout: 5000,
-            retry: 0,
-          }),
-        ]);
+        const result = await got.get(config.lastVersionFile, {
+          timeout: 6000,
+          retry: 0,
+        });
         const lastVersionFileContent = result.body;
         lastVersion = lastVersionFileContent.match(versionRegx)![1];
         lastLog = lastVersionFileContent.match(logRegx)
@@ -127,7 +111,7 @@ export default class SystemService {
     } catch (error: any) {
       return {
         code: 400,
-        data: error.message,
+        message: error.message,
       };
     }
   }
@@ -180,5 +164,14 @@ export default class SystemService {
     });
 
     return { code: 200 };
+  }
+
+  public async notify({ title, content }: { title: string; content: string }) {
+    const isSuccess = await this.notificationService.notify(title, content);
+    if (isSuccess) {
+      return { code: 200, message: '通知发送成功' };
+    } else {
+      return { code: 400, message: '通知发送失败，请检查系统设置/通知配置' };
+    }
   }
 }

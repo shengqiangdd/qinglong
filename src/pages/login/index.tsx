@@ -18,7 +18,7 @@ import { MobileOutlined } from '@ant-design/icons';
 const FormItem = Form.Item;
 const { Countdown } = Statistic;
 
-const Login = () => {
+const Login = ({ reloadUser }: any) => {
   const [loading, setLoading] = useState(false);
   const [waitTime, setWaitTime] = useState<any>();
   const { theme } = useTheme();
@@ -100,8 +100,8 @@ const Login = () => {
             <div>上次登录状态：{retries > 0 ? `失败${retries}次` : '成功'}</div>
           </>
         ),
-        duration: 5,
       });
+      reloadUser(true);
       history.push('/crontab');
     } else if (data.code === 100) {
       message.warn(data.message);
@@ -135,7 +135,7 @@ const Login = () => {
           <img
             alt="logo"
             className={styles.logo}
-            src="https://pic.imgdb.cn/item/61acd0dd2ab3f51d912b1986.png"
+            src="http://qn.whyour.cn/logo.png"
           />
           <span className={styles.title}>
             {twoFactor ? '两步验证' : config.siteName}

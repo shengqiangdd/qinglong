@@ -44,6 +44,10 @@ export default {
       value: 'envs',
     },
     {
+      name: '订阅管理',
+      value: 'subscriptions',
+    },
+    {
       name: '配置文件',
       value: 'configs',
     },
@@ -67,14 +71,18 @@ export default {
   scopesMap: {
     crons: '定时任务',
     envs: '环境变量',
+    subscriptions: '订阅管理',
     configs: '配置文件',
     scripts: '脚本管理',
     logs: '任务日志',
+    dependencies: '依赖管理',
+    system: '系统信息',
   },
   notificationModes: [
     { value: 'gotify', label: 'Gotify' },
     { value: 'goCqHttpBot', label: 'GoCqHttpBot' },
     { value: 'serverChan', label: 'Server酱' },
+    { value: 'pushDeer', label: 'PushDeer' },
     { value: 'bark', label: 'Bark' },
     { value: 'telegramBot', label: 'Telegram机器人' },
     { value: 'dingtalkBot', label: '钉钉机器人' },
@@ -111,11 +119,22 @@ export default {
     serverChan: [
       { label: 'serverChanKey', tip: 'Server酱SENDKEY', required: true },
     ],
+    pushDeer: [
+      {
+        label: 'pushDeerKey',
+        tip: 'PushDeer的Key，https://github.com/easychen/pushdeer',
+        required: true,
+      },
+    ],
     bark: [
       {
         label: 'barkPush',
         tip: 'Bark的信息IP/设备码，例如：https://api.day.app/XXXXXXXX',
         required: true,
+      },
+      {
+        label: 'barkIcon',
+        tip: 'BARK推送图标,自定义推送图标 (需iOS15或以上才能显示)',
       },
       { label: 'barkSound', tip: 'BARK推送铃声,铃声列表去APP查看复制填写' },
       { label: 'barkGroup', tip: 'BARK推送消息的分组, 默认为qinglong' },
@@ -200,11 +219,13 @@ export default {
     '/initialization': '初始化',
     '/cron': '定时任务',
     '/env': '环境变量',
+    '/subscription': '订阅管理',
     '/config': '配置文件',
     '/script': '脚本管理',
     '/diff': '对比工具',
     '/log': '任务日志',
     '/setting': '系统设置',
+    '/error': '错误日志',
   },
   dependenceTypes: ['nodejs', 'python3', 'linux'],
 };
